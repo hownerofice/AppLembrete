@@ -1,5 +1,3 @@
-# app_clientes_final_layout_delete_expired.py
-
 import kivy
 from kivy.app import App
 from kivy.uix.label import Label
@@ -20,7 +18,7 @@ import os
 import sys
 
 
-# --- Tenta importar Plyer ---
+# importar Plyer
 try:
     from plyer import calendar
     PLYER_CALENDAR_AVAILABLE = True
@@ -31,14 +29,12 @@ except ImportError:
 except NotImplementedError:
     PLYER_CALENDAR_AVAILABLE = False
     print("[WARNING] Plyer Calendar backend not implemented for this platform.")
-# -----------------------------
 
 
 # Opcional: Especifique a versão mínima necessária do Kivy
 kivy.require('2.0.0')
 
 
-# --- Classe auxiliar para lidar com objetos datetime ao salvar/carregar JSON ---
 class DateTimeEncoder(json.JSONEncoder):
     """Converte objetos datetime para strings ISO 8601 ao serializar para JSON."""
     def default(self, obj):
@@ -170,14 +166,13 @@ class MobileApp(App):
         print(f"[INFO ] User data directory: {self.user_data_dir}")
         print(f"[INFO ] Save file path: {self.save_file_path}")
 
-        # >>>>> Carrega os dados ao iniciar <<<<<
         self.load_data()
 
         # --- Cria a Tela Principal (contém a lista ATIVA) ---
         main_screen = Screen(name='main_screen')
         main_layout = BoxLayout(orientation='vertical', spacing=10, padding=10)
 
-        # Seção 1: Exibição da Hora Principal
+        # Hora Principal
         self.time_label = Label(text='Carregando...',
                                 font_size=48,
                                 halign='center',
@@ -185,7 +180,6 @@ class MobileApp(App):
                                 size_hint_y=0.1)
 
 
-        # Seção 2: Caixa Cinza para CONTENER a lista rolável de TODOS os Clientes ATIVOS
         self.all_clients_box_layout = BoxLayout(orientation='vertical',
                                                 size_hint_y=0.55,
                                                 padding=10, spacing=5)
@@ -204,7 +198,6 @@ class MobileApp(App):
         self.all_clients_box_layout.add_widget(self.client_list_scrollview)
 
 
-        # Seção 3: Rótulo de Feedback e Botões
         self.info_label = Label(text='Use o botão abaixo para adicionar clientes',
                                  font_size=20,
                                  halign='center',
@@ -213,9 +206,6 @@ class MobileApp(App):
 
         main_buttons_layout = BoxLayout(orientation='horizontal', spacing=10, size_hint_y=None, height=60)
 
-        # >>>>> REMOVIDO: Botão Mudar Texto Info <<<<<
-        # change_text_button = Button(text='Mudar Texto Info', font_size=20)
-        # change_text_button.bind(on_press=self.on_change_text_button_press)
 
         open_add_client_button = Button(text='Adicionar Novo Cliente', font_size=20)
         open_add_client_button.bind(on_press=self.show_add_client_popup)
@@ -223,11 +213,6 @@ class MobileApp(App):
         expired_clients_button = Button(text='Vencidos', font_size=20)
         expired_clients_button.bind(on_press=self.go_to_expired_screen)
 
-
-        # >>>>> REMOVIDO: Adição do botão Mudar Texto Info <<<<<
-        # main_buttons_layout.add_widget(change_text_button) # Opcional
-        main_buttons_layout.add_widget(open_add_client_button)
-        main_buttons_layout.add_widget(expired_clients_button)
 
 
         main_layout.add_widget(self.time_label)
@@ -237,7 +222,7 @@ class MobileApp(App):
 
         main_screen.add_widget(main_layout)
 
-        # --- Cria a Segunda Tela (Vencidos - contem a lista VENCIDA) ---
+        #  Segunda Tela (Vencidos - contem a lista VENCIDA) ---
         expired_screen = ExpiredScreen(name='expired_screen')
 
         # --- Cria a Tela de Alerta ---
@@ -254,7 +239,7 @@ class MobileApp(App):
         self.update_time()
         Clock.schedule_interval(self.update_time, 1)
 
-        # >>>>> Atualiza as exibições APÓS carregar os dados <<<<<
+        # Atualiza as exibições APÓS carregar os dados <<<<<
         self.update_client_list_display()
         self.update_expired_list_display()
 
@@ -263,12 +248,6 @@ class MobileApp(App):
 
 
         return self.sm
-
-    # >>>>> REMOVIDO: Método on_change_text_button_press <<<<<
-    # def on_change_text_button_press(self, instance):
-    #     """Callback para o botão que muda o texto do info_label."""
-    #     self.info_label.text = 'Botão de Texto Info Clicado!'
-    #     print("Change text button was pressed!")
 
 
     # >>>>> Método para salvar os dados <<<<<
@@ -279,10 +258,8 @@ class MobileApp(App):
             'expired': self.expired_clients_list
         }
         try:
-            # Garante que o diretório de dados existe antes de salvar
             os.makedirs(self.user_data_dir, exist_ok=True)
             with open(self.save_file_path, 'w') as f:
-                # Usa a classe customizada DateTimeEncoder para serializar datetime
                 json.dump(data_to_save, f, indent=4, cls=DateTimeEncoder)
             print(f"[INFO ] Data saved successfully to {self.save_file_path}")
         except Exception as e:
@@ -346,14 +323,13 @@ class MobileApp(App):
             print(f"[INFO ] Save file not found at {self.save_file_path}. Starting with empty lists.")
 
 
-    # >>>>> Override do método on_stop para salvar os dados ao fechar <<<<<
+    # método on_stop para salvar os dados ao fechar 
     def on_stop(self):
         """Salva os dados dos clientes quando o aplicativo é fechado."""
         print("[INFO ] App stopping. Saving data...")
         self.save_data()
 
 
-    # Método para atualizar a posição e tamanho do retângulo de fundo do status (na lista vencida)
     def update_status_rect(self, instance, value):
         """Atualiza a posição e tamanho do retângulo de fundo do rótulo de status."""
         if hasattr(instance, 'status_bg_rect'):
@@ -361,7 +337,7 @@ class MobileApp(App):
              instance.status_bg_rect.size = instance.size
 
 
-    # Método para exibir o popup de confirmação de exclusão (da lista ATIVA)
+    #popup de confirmação de exclusão (da lista ATIVA)
     def show_delete_confirmation_popup(self, instance):
         """Exibe um popup pedindo confirmação para excluir um cliente da lista ativa."""
         client_to_confirm = instance.client_data
@@ -395,7 +371,7 @@ class MobileApp(App):
 
         confirmation_popup.open()
 
-    # >>>>> NOVO: Método para exibir o popup de confirmação de exclusão (da lista VENCIDA) <<<<<
+    # popup de confirmação de exclusão (da lista VENCIDA) <<<<<
     def show_expired_delete_confirmation_popup(self, instance):
         """Exibe um popup pedindo confirmação para excluir PERMANENTEMENTE um cliente da lista vencida."""
         client_to_confirm = instance.client_data
@@ -452,7 +428,7 @@ class MobileApp(App):
             self.info_label.text = "Erro ao excluir cliente."
             popup_instance.dismiss()
 
-    # >>>>> NOVO: Método para excluir PERMANENTEMENTE da lista VENCIDA <<<<<
+    # excluir PERMANENTEMENTE da lista VENCIDA 
     def confirm_expired_delete(self, client_to_delete, popup_instance):
         """Remove o cliente permanentemente da lista de vencidos."""
         if client_to_delete in self.expired_clients_list:
@@ -494,7 +470,6 @@ class MobileApp(App):
         time_str = now.strftime('%H:%M:%S')
         self.time_label.text = time_str
 
-    # Método para atualizar a exibição da lista de clientes ATIVOS (com botão de excluir e timer)
     def update_client_list_display(self):
         """Limpa a lista de exibição e a preenche com os clientes ATIVOS atuais."""
         self.client_list_layout.clear_widgets()
@@ -518,12 +493,10 @@ class MobileApp(App):
                               size_hint_y=1)
 
 
-            # Detalhes (Nome, MAC, Senha) - Permitindo que os Labels definam sua altura
             details_layout = BoxLayout(orientation='vertical', spacing=2, size_hint_x=0.5,
                                        size_hint_y=None)
 
 
-            # Mostrando Nome, MAC e Senha na lista ATIVA
             nome_label = Label(text=f"Nome: {client.get('nome', 'N/A')}",
                                font_size=15, halign='left', valign='top', color=(0,0,0,1),
                                text_size=((list_layout_width * 0.5 * 0.95), None), size_hint_y=None)
@@ -541,11 +514,9 @@ class MobileApp(App):
             details_layout.add_widget(mac_label)
             details_layout.add_widget(senha_status_label)
 
-            # Timer - Permitindo que o Label defina sua altura
+
             timer_label = Label(text="Timer: --:--:--", font_size=16, size_hint_x=0.3, halign='center', valign='middle', color=(0,0,0,1),
                                 size_hint_y=1)
-
-            # Associa a creation_time ao rótulo do timer
             timer_label.client_creation_time = client.get('creation_time')
             timer_label.is_timer_label = True
 
@@ -574,7 +545,6 @@ class MobileApp(App):
             self.client_list_layout.add_widget(client_row_layout)
 
 
-    # Método para atualizar a exibição da lista de clientes VENCIDOS em layout horizontal
     def update_expired_list_display(self):
         """Limpa a lista de exibição de vencidos e a preenche com os clientes vencidos em layout horizontal, incluindo botão de exclusão."""
         expired_screen = self.sm.get_screen('expired_screen')
@@ -655,7 +625,6 @@ class MobileApp(App):
             status_label.text = f"[b]{status_text}[/b]"
             status_label.text_size = ((base_text_width * status_width_hint * 0.95), None)
 
-            # >>>>> NOVO: Botão de exclusão para a lista vencida <<<<<
             expired_delete_button = Button(text='X',
                                            font_size=18,
                                            size_hint_x=delete_width_hint,
@@ -663,11 +632,9 @@ class MobileApp(App):
                                            background_color=(1, 0, 0, 1))
 
             expired_delete_button.client_data = client
-            # Este botão chama o popup que EXCLUI PERMANENTEMENTE
             expired_delete_button.bind(on_press=self.show_expired_delete_confirmation_popup)
 
 
-            # Adiciona todos os elementos à linha HORIZONTAL
             expired_row_layout.add_widget(num_label)
             expired_row_layout.add_widget(nome_label)
             expired_row_layout.add_widget(mac_label)
@@ -679,13 +646,12 @@ class MobileApp(App):
             expired_layout.add_widget(expired_row_layout)
 
 
-    # >>>>> Método aprimorado para atualizar os timers e mover expirados <<<<<
     def update_timers(self, dt):
         """Calcula e atualiza o tempo restante para clientes ATIVOS e move expirados."""
         now = datetime.datetime.now()
         expired_clients_this_tick = [] # Lista para clientes que expiram NESTA tick
 
-        # --- Passo 1: Identificar clientes que expiraram nesta tick (Itera sobre a lista de DADOS ativos) ---
+        #Identificar clientes que expiraram nesta tick (Itera sobre a lista de DADOS ativos) ---
         for client_data in list(self.clients_list): # Usa uma cópia
             creation_time = client_data.get('creation_time')
             if creation_time is None:
@@ -732,7 +698,7 @@ class MobileApp(App):
                      self.info_label.text = "Plyer Calendar não disponível."
 
 
-        # --- Passo 2: Mover os clientes expirados e redesenhar se necessário ---
+        # Mover os clientes expirados e redesenhar se necessário ---
         if expired_clients_this_tick:
              self.clients_list = [client for client in self.clients_list if client not in expired_clients_this_tick]
              self.expired_clients_list.extend(expired_clients_this_tick)
@@ -743,7 +709,7 @@ class MobileApp(App):
              return # Sai da função para evitar atualizar timers dos widgets antigos
 
 
-        # --- Passo 3: Se nenhum cliente expirou nesta tick, atualizar os rótulos dos timers VISÍVEIS ---
+        #Se nenhum cliente expirou nesta tick, atualizar os rótulos dos timers VISÍVEIS ---
         # Iteramos diretamente sobre a lista de rótulos de timer ativos
         for timer_label in list(self.active_timer_labels): # Itera sobre uma cópia
             # Verifica se o rótulo ainda está no layout (ainda visível na lista ativa)
@@ -779,7 +745,6 @@ class MobileApp(App):
         main_popup_layout = BoxLayout(orientation='vertical', spacing=10, padding=10)
         input_grid = GridLayout(cols=2, spacing=10, size_hint_y=None, height=220)
 
-        # CAMPOS DE ENTRADA VISÍVEIS
         input_grid.add_widget(Label(text='MAC:', halign='right', valign='middle'))
         self.mac_input = TextInput(hint_text='Endereço MAC', multiline=False)
         input_grid.add_widget(self.mac_input)
